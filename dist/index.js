@@ -70,7 +70,24 @@ var OpenRouterService = class {
 // server/routes.ts
 import { randomUUID } from "crypto";
 async function registerRoutes(app2) {
-  const openRouterService = new OpenRouterService();
+  let openRouterService;
+  try {
+    openRouterService = new OpenRouterService();
+  } catch (error) {
+    console.error("Failed to initialize OpenRouter service:", error);
+    openRouterService = {
+      chat: async () => ({
+        content: "Service temporarily unavailable. Please check your API configuration.",
+        modelUsed: "error"
+      })
+    };
+  }
+  process.on("unhandledRejection", (reason, promise) => {
+    console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  });
+  process.on("uncaughtException", (error) => {
+    console.error("Uncaught Exception:", error);
+  });
   function detectAutomations(message) {
     const automations = [];
     const lowerMessage = message.toLowerCase();
@@ -117,13 +134,38 @@ async function registerRoutes(app2) {
       res.json(response);
     } catch (error) {
       console.error("Chat API error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to process chat request";
       res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to process chat request"
+        error: errorMessage,
+        details: process.env.NODE_ENV === "development" ? error : void 0
       });
     }
   });
   app2.get("/api/health", (req, res) => {
-    res.json({ status: "ok", timestamp: (/* @__PURE__ */ new Date()).toISOString() });
+    try {
+      const healthStatus = {
+        status: "ok",
+        timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+        environment: process.env.NODE_ENV || "unknown",
+        openRouterAvailable: openRouterService && typeof openRouterService.chat === "function",
+        uptime: process.uptime()
+      };
+      res.json(healthStatus);
+    } catch (error) {
+      console.error("Health check error:", error);
+      res.status(500).json({
+        status: "error",
+        error: "Health check failed",
+        timestamp: (/* @__PURE__ */ new Date()).toISOString()
+      });
+    }
+  });
+  app2.get("/api/test", (req, res) => {
+    res.json({
+      message: "Server is running!",
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      env: process.env.NODE_ENV || "unknown"
+    });
   });
   const httpServer = createServer(app2);
   return httpServer;
@@ -159,8 +201,14 @@ var vite_config_default = defineConfig({
   },
   root: path.resolve(import.meta.dirname, "client"),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
-    emptyOutDir: true
+    outDir: path.resolve(import.meta.dirname, "dist"),
+    emptyOutDir: true,
+    rollupOptions: {
+      onwarn(warning, warn) {
+        if (warning.code === "CIRCULAR_DEPENDENCY") return;
+        warn(warning);
+      }
+    }
   },
   server: {
     fs: {
@@ -225,7 +273,7 @@ async function setupVite(app2, server) {
   });
 }
 function serveStatic(app2) {
-  const distPath = path2.resolve(import.meta.dirname, "public");
+  const distPath = path2.resolve(import.meta.dirname, "..", "dist");
   if (!fs.existsSync(distPath)) {
     throw new Error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`
@@ -239,6 +287,16 @@ function serveStatic(app2) {
 
 // server/index.ts
 var app = express2();
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  if (req.method === "OPTIONS") {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 app.use(express2.json());
 app.use(express2.urlencoded({ extended: false }));
 app.use((req, res, next) => {
@@ -271,7 +329,7 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
     res.status(status).json({ message });
-    throw err;
+    console.error("Server error:", err);
   });
   if (app.get("env") === "development") {
     await setupVite(app, server);
