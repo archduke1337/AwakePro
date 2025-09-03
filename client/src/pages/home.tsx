@@ -19,23 +19,37 @@ export default function Home() {
   const { data: healthCheck } = useQuery({
     queryKey: ['/api/health'],
     refetchInterval: 30000,
-    retry: false
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30000
   });
 
   const chatMutation = useMutation({
     mutationFn: async (request: ChatRequest): Promise<ChatResponse> => {
-      const response = await apiRequest('POST', '/api/chat', request);
-      return response.json();
+      try {
+        const response = await apiRequest('POST', '/api/chat', request);
+        const data = await response.json();
+        if (!data || typeof data !== 'object') {
+          throw new Error('Invalid response format');
+        }
+        return data;
+      } catch (error) {
+        console.error('Chat mutation error:', error);
+        throw error;
+      }
     },
     onSuccess: (response) => {
-      setResponses(prev => [response, ...prev]);
-      setMessage("");
-      toast({
-        title: "Response received",
-        description: `AI response from ${response.model.toUpperCase()} model`,
-      });
+      if (response && response.content) {
+        setResponses(prev => [response, ...prev]);
+        setMessage("");
+        toast({
+          title: "Response received",
+          description: `AI response from ${(response.model || 'AI').toUpperCase()} model`,
+        });
+      }
     },
     onError: (error) => {
+      console.error('Chat error:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to get AI response",
@@ -45,19 +59,37 @@ export default function Home() {
   });
 
   const handleSubmit = () => {
-    if (!message.trim()) {
+    try {
+      if (!message?.trim()) {
+        toast({
+          title: "Error", 
+          description: "Please enter a message",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!selectedModel) {
+        toast({
+          title: "Error", 
+          description: "Please select an AI model",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      chatMutation.mutate({
+        message: message.trim(),
+        model: selectedModel as 'auto' | 'gpt' | 'claude' | 'llama'
+      });
+    } catch (error) {
+      console.error('Submit error:', error);
       toast({
-        title: "Error", 
-        description: "Please enter a message",
+        title: "Error",
+        description: "Failed to submit request",
         variant: "destructive",
       });
-      return;
     }
-
-    chatMutation.mutate({
-      message: message.trim(),
-      model: selectedModel as 'auto' | 'gpt' | 'claude' | 'llama'
-    });
   };
 
   const formatTimestamp = (timestamp: string) => {

@@ -97,6 +97,7 @@
     @apply font-sans antialiased bg-background text-foreground;
     background: linear-gradient(to bottom, hsl(0, 0%, 100%) 0%, hsl(210, 40%, 99%) 100%);
     min-height: 100vh;
+    overflow-x: hidden;
   }
 
   html {
@@ -343,6 +344,7 @@
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   transition: left 0.5s;
+  pointer-events: none;
 }
 
 .btn-primary:hover::before {
@@ -421,6 +423,7 @@
   border: 2px solid currentColor;
   border-radius: 50%;
   animation: pulseRing 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+  pointer-events: none;
 }
 
 @keyframes pulseRing {
@@ -491,6 +494,17 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  
+  .fade-in,
+  .slide-up,
+  .slide-down,
+  .scale-in,
+  .bounce-in,
+  .float,
+  .glow,
+  .subtle-pulse {
+    animation: none !important;
   }
 }
 
@@ -585,6 +599,7 @@
   background: rgba(255, 255, 255, 0.3);
   transform: translate(-50%, -50%);
   transition: width 0.3s ease, height 0.3s ease;
+  pointer-events: none;
 }
 
 .btn-feedback:active::after {
@@ -596,8 +611,24 @@
 .card-shadow {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transition: box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: box-shadow;
 }
 
 .card-shadow:hover {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Ensure animations don't cause layout shifts */
+.fade-in,
+.slide-up,
+.slide-down,
+.scale-in,
+.bounce-in {
+  will-change: transform, opacity;
+}
+
+.float,
+.glow,
+.subtle-pulse {
+  will-change: transform;
 }
