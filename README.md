@@ -26,7 +26,8 @@ After deploying, add these environment variables in your Vercel dashboard:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `NEXT_PUBLIC_OPENROUTER_API_KEY` | Your OpenRouter API key | ✅ Yes |
+| `OPENROUTER_API_KEY` | Your OpenRouter API key | ✅ Yes |
+| `DATABASE_URL` | Your Database connection string | ✅ Yes |
 
 ## 🔧 Converting to Next.js for Vercel
 
