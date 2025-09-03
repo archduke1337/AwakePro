@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWAKE – Meta-AI OS Prototype</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    popover: {
+                        DEFAULT: "var(--popover)",
+                        foreground: "var(--popover-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    destructive: {
+                        DEFAULT: "var(--destructive)",
+                        foreground: "var(--destructive-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                },
+                fontFamily: {
+                    sans: ["Inter", "ui-sans-serif", "system-ui"],
+                }
+            },
+        }
+    };
+    </script>
+    
+    <style>
+        :root {
+            --background: hsl(210 40% 98%);
+            --foreground: hsl(222.2 84% 4.9%);
+            --card: hsl(0 0% 100%);
+            --card-foreground: hsl(222.2 84% 4.9%);
+            --popover: hsl(0 0% 100%);
+            --popover-foreground: hsl(222.2 84% 4.9%);
+            --primary: hsl(217.2 91.2% 59.8%);
+            --primary-foreground: hsl(0 0% 100%);
+            --secondary: hsl(210 40% 96%);
+            --secondary-foreground: hsl(222.2 84% 4.9%);
+            --muted: hsl(210 40% 96%);
+            --muted-foreground: hsl(215.4 16.3% 46.9%);
+            --accent: hsl(210 40% 96%);
+            --accent-foreground: hsl(222.2 84% 4.9%);
+            --destructive: hsl(0 84.2% 60.2%);
+            --destructive-foreground: hsl(0 0% 100%);
+            --border: hsl(214.3 31.8% 91.4%);
+            --input: hsl(214.3 31.8% 91.4%);
+            --ring: hsl(217.2 91.2% 59.8%);
+            --radius: 0.75rem;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: hsl(222.2 84% 4.9%);
+                --foreground: hsl(210 40% 98%);
+                --card: hsl(222.2 84% 4.9%);
+                --card-foreground: hsl(210 40% 98%);
+                --popover: hsl(222.2 84% 4.9%);
+                --popover-foreground: hsl(210 40% 98%);
+                --primary: hsl(217.2 91.2% 59.8%);
+                --primary-foreground: hsl(222.2 84% 4.9%);
+                --secondary: hsl(217.2 32.6% 17.5%);
+                --secondary-foreground: hsl(210 40% 98%);
+                --muted: hsl(217.2 32.6% 17.5%);
+                --muted-foreground: hsl(215 20.2% 65.1%);
+                --accent: hsl(217.2 32.6% 17.5%);
+                --accent-foreground: hsl(210 40% 98%);
+                --destructive: hsl(0 62.8% 30.6%);
+                --destructive-foreground: hsl(210 40% 98%);
+                --border: hsl(217.2 32.6% 17.5%);
+                --input: hsl(217.2 32.6% 17.5%);
+                --ring: hsl(217.2 91.2% 59.8%);
+            }
+        }
+
+        .loading-dots {
+            animation: loading 1.4s infinite ease-in-out both;
+        }
+        
+        .loading-dots:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes loading {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body class="min-h-full bg-background font-sans antialiased">
+    <!-- @COMPONENT: Layout -->
+    <div class="min-h-screen bg-background">
+        
+        <!-- @COMPONENT: Header -->
+        <header class="border-b border-border bg-card">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex items-center justify-center">
+                    <h1 class="text-2xl font-bold text-foreground tracking-tight">
+                        <span class="text-primary">AWAKE</span> 
+                        <span class="text-muted-foreground font-normal">– Meta-AI OS Prototype</span>
+                    </h1>
+                </div>
+                <p class="text-center text-muted-foreground text-sm mt-2">
+                    Your unified AI assistant powered by multiple language models
+                </p>
+            </div>
+        </header>
+        <!-- @END_COMPONENT: Header -->
+
+        <!-- @COMPONENT: MainContent -->
+        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <!-- @COMPONENT: InputSection -->
+            <div class="bg-card rounded-lg border border-border shadow-sm p-6 mb-6">
+                <div class="space-y-4">
+                    <!-- Model Selection -->
+                    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                        <label for="model-select" class="text-sm font-medium text-foreground whitespace-nowrap">
+                            AI Model:
+                        </label>
+                        <select 
+                            id="model-select" 
+                            class="flex-1 px-3 py-2 bg-input border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                            data-bind="selectedModel"
+                            data-implementation="Should control which OpenRouter model is called"
+                        >
+                            <option value="auto" data-mock="true">Auto (Random Selection)</option>
+                            <option value="gpt" data-mock="true">GPT</option>
+                            <option value="claude" data-mock="true">Claude</option>
+                            <option value="llama" data-mock="true">LLaMA</option>
+                        </select>
+                    </div>
+
+                    <!-- Text Input -->
+                    <div class="space-y-2">
+                        <label for="user-input" class="text-sm font-medium text-foreground">
+                            Ask anything:
+                        </label>
+                        <div class="relative">
+                            <textarea
+                                id="user-input"
+                                placeholder="What would you like to know? Type your question here..."
+                                rows="3"
+                                class="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-none"
+                                data-bind="userInput"
+                                data-implementation="Should capture user query and detect automation keywords"
+                                data-mock="true"
+                            >How can AI help me be more productive with my daily tasks?</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-end">
+                        <button 
+                            type="submit"
+                            class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            data-event="click:handleSubmit"
+                            data-implementation="Should validate input and call OpenRouter API"
+                        >
+                            <span class="submit-text">Ask AWAKE</span>
+                            <!-- Loading State (hidden by default) -->
+                            <span class="loading-text hidden">
+                                <span class="inline-flex items-center gap-2">
+                                    <span>Processing</span>
+                                    <span class="flex space-x-1">
+                                        <span class="w-1 h-1 bg-primary-foreground rounded-full loading-dots"></span>
+                                        <span class="w-1 h-1 bg-primary-foreground rounded-full loading-dots"></span>
+                                        <span class="w-1 h-1 bg-primary-foreground rounded-full loading-dots"></span>
+                                    </span>
+                                </span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: InputSection -->
+
+            <!-- @COMPONENT: ResponseSection -->
+            <div class="space-y-4" id="responses-container" data-implementation="Container for AI responses">
+                
+                <!-- Sample Response Card -->
+                <div class="bg-card rounded-lg border border-border shadow-sm p-6 fade-in" data-mock="true">
+                    <div class="space-y-4">
+                        <!-- Response Header -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                                    <span class="text-primary-foreground text-sm font-semibold">AI</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-foreground" data-bind="modelUsed">GPT-4 Response</h3>
+                                    <p class="text-xs text-muted-foreground" data-bind="timestamp">Just now</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded-md font-medium" data-bind="modelBadge">GPT</span>
+                        </div>
+
+                        <!-- Response Content -->
+                        <div class="prose prose-sm max-w-none text-foreground" data-bind="aiResponse">
+                            <p data-mock="true">AI can significantly boost your daily productivity through several key strategies:</p>
+                            
+                            <ul data-mock="true">
+                                <li><strong>Task Automation:</strong> Use AI to automate repetitive tasks like email sorting, calendar scheduling, and data entry.</li>
+                                <li><strong>Smart Prioritization:</strong> AI can analyze your tasks and suggest optimal scheduling based on deadlines and importance.</li>
+                                <li><strong>Content Generation:</strong> Get help writing emails, reports, and documentation more efficiently.</li>
+                                <li><strong>Decision Support:</strong> Use AI for research, analysis, and getting quick answers to complex questions.</li>
+                            </ul>
+
+                            <p data-mock="true">The key is to identify recurring patterns in your work and leverage AI tools to handle the routine aspects, freeing you up for more strategic thinking.</p>
+                        </div>
+
+                        <!-- Automation Simulations -->
+                        <div class="space-y-2 mt-4 pt-4 border-t border-border">
+                            <h4 class="text-sm font-medium text-foreground">Automated Actions</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2 px-3 py-2 bg-muted rounded-md" data-mock="true">
+                                    <span class="text-lg">✅</span>
+                                    <span class="text-sm text-muted-foreground">Action simulated: Jira task created!</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Another Sample Response showing different model -->
+                <div class="bg-card rounded-lg border border-border shadow-sm p-6 fade-in" data-mock="true">
+                    <div class="space-y-4">
+                        <!-- Response Header -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-sm font-semibold">AI</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-foreground" data-bind="modelUsed">Claude Response</h3>
+                                    <p class="text-xs text-muted-foreground" data-bind="timestamp">2 minutes ago</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-xs rounded-md font-medium" data-bind="modelBadge">Claude</span>
+                        </div>
+
+                        <!-- Response Content -->
+                        <div class="prose prose-sm max-w-none text-foreground" data-bind="aiResponse">
+                            <p data-mock="true">Here's a systematic approach to boost your productivity with AI assistance:</p>
+                            
+                            <div class="bg-secondary p-4 rounded-md my-4" data-mock="true">
+                                <h5 class="font-semibold text-foreground mb-2">Daily AI Productivity Workflow:</h5>
+                                <ol class="text-sm text-secondary-foreground space-y-1">
+                                    <li>1. Morning: Use AI to review and prioritize your email inbox</li>
+                                    <li>2. Planning: Generate task breakdowns for complex projects</li>
+                                    <li>3. Execution: Get real-time help with writing and problem-solving</li>
+                                    <li>4. Review: Use AI to summarize meetings and create action items</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <!-- Multiple Automation Simulations -->
+                        <div class="space-y-2 mt-4 pt-4 border-t border-border">
+                            <h4 class="text-sm font-medium text-foreground">Automated Actions</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950 rounded-md" data-mock="true">
+                                    <span class="text-lg">📧</span>
+                                    <span class="text-sm text-blue-700 dark:text-blue-300">Action simulated: Email sent!</span>
+                                </div>
+                                <div class="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950 rounded-md" data-mock="true">
+                                    <span class="text-lg">💬</span>
+                                    <span class="text-sm text-green-700 dark:text-green-300">Action simulated: Slack message posted!</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State (shown when no responses) -->
+                <div class="text-center py-12 hidden" id="empty-state" data-implementation="Show when no responses exist">
+                    <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl text-muted-foreground">🤖</span>
+                    </div>
+                    <h3 class="text-lg font-medium text-foreground mb-2">Ready to assist you</h3>
+                    <p class="text-muted-foreground">Ask any question and let AWAKE's AI ensemble provide you with comprehensive answers.</p>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: ResponseSection -->
+
+            <!-- @COMPONENT: StatsSection -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 mb-8">
+                <div class="bg-card rounded-lg border border-border p-4 text-center">
+                    <div class="text-2xl font-bold text-primary" data-bind="totalQueries" data-mock="true">847</div>
+                    <div class="text-sm text-muted-foreground">Total Queries</div>
+                </div>
+                <div class="bg-card rounded-lg border border-border p-4 text-center">
+                    <div class="text-2xl font-bold text-primary" data-bind="automationsTriggered" data-mock="true">23</div>
+                    <div class="text-sm text-muted-foreground">Automations Triggered</div>
+                </div>
+                <div class="bg-card rounded-lg border border-border p-4 text-center">
+                    <div class="text-2xl font-bold text-primary" data-bind="activeModels" data-mock="true">4</div>
+                    <div class="text-sm text-muted-foreground">AI Models Available</div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: StatsSection -->
+
+        </main>
+        <!-- @END_COMPONENT: MainContent -->
+
+        <!-- @COMPONENT: Footer -->
+        <footer class="border-t border-border bg-card mt-16">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <!-- Tagline -->
+                <div class="text-center mb-6">
+                    <p class="text-lg text-muted-foreground italic">
+                        Powered by many AIs, fused into one — <span class="font-semibold text-primary">AWAKE</span>
+                    </p>
+                </div>
+
+                <!-- Model Status Indicators -->
+                <div class="flex justify-center items-center space-x-6 mb-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="text-xs text-muted-foreground">GPT Online</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="text-xs text-muted-foreground">Claude Online</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="text-xs text-muted-foreground">LLaMA Online</span>
+                    </div>
+                </div>
+
+                <!-- Automation Hub Status -->
+                <div class="bg-muted rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-foreground mb-3 text-center">Automation Hub Status</h3>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div class="space-y-1">
+                            <div class="text-lg">📧</div>
+                            <div class="text-xs text-muted-foreground">Email</div>
+                            <div class="text-xs text-green-600 dark:text-green-400 font-medium">Active</div>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="text-lg">✅</div>
+                            <div class="text-xs text-muted-foreground">Tasks</div>
+                            <div class="text-xs text-green-600 dark:text-green-400 font-medium">Active</div>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="text-lg">💬</div>
+                            <div class="text-xs text-muted-foreground">Slack</div>
+                            <div class="text-xs text-green-600 dark:text-green-400 font-medium">Active</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Info -->
+                <div class="text-center mt-6 pt-4 border-t border-border">
+                    <p class="text-xs text-muted-foreground">
+                        Built with Next.js • Powered by OpenRouter API • Deploy to Vercel
+                    </p>
+                </div>
+            </div>
+        </footer>
+        <!-- @END_COMPONENT: Footer -->
+
+    </div>
+    <!-- @END_COMPONENT: Layout -->
+
+    <script>
+    (function() {
+        // TODO: Implement OpenRouter API integration
+        // TODO: Implement model selection logic
+        // TODO: Implement automation keyword detection
+        // TODO: Implement response rendering
+        
+        // Mock interaction for demonstration
+        const submitButton = document.querySelector('button[type="submit"]');
+        const userInput = document.getElementById('user-input');
+        const modelSelect = document.getElementById('model-select');
+        
+        if (submitButton) {
+            submitButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Show loading state
+                const submitText = this.querySelector('.submit-text');
+                const loadingText = this.querySelector('.loading-text');
+                
+                if (submitText && loadingText) {
+                    submitText.classList.add('hidden');
+                    loadingText.classList.remove('hidden');
+                    this.disabled = true;
+                }
+                
+                // Simulate API call delay
+                setTimeout(() => {
+                    if (submitText && loadingText) {
+                        submitText.classList.remove('hidden');
+                        loadingText.classList.add('hidden');
+                        this.disabled = false;
+                    }
+                    
+                    // In real implementation, this would:
+                    // 1. Get user input and selected model
+                    // 2. Call OpenRouter API with appropriate model endpoint
+                    // 3. Detect automation keywords and trigger simulations
+                    // 4. Render response in new card
+                    console.log('Would submit to OpenRouter API:', {
+                        input: userInput?.value,
+                        model: modelSelect?.value
+                    });
+                }, 2000);
+            });
+        }
+
+        // Theme toggle functionality (bonus feature)
+        const toggleTheme = function() {
+            document.documentElement.classList.toggle('dark');
+        };
+        
+        // Auto-detect system theme preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+    })();
+    </script>
+</body>
+</html>
