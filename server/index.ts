@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 
+// Vercel deployment fix - simplified server without complex imports
 const app = express();
 
 // Basic middleware
