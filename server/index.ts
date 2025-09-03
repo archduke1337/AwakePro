@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 
-// Vercel deployment fix - simplified server without complex imports
+// Vercel deployment fix - bulletproof server with AI fallbacks
 const app = express();
 
 // Basic middleware
@@ -20,25 +20,28 @@ app.use((req, res, next) => {
   }
 });
 
-// OpenRouter AI Service (simplified)
-class SimpleOpenRouterService {
-  private apiKey: string;
+// Safe OpenRouter AI Service with fallbacks
+class SafeOpenRouterService {
+  private apiKey: string = '';
   private baseUrl = 'https://openrouter.ai/api/v1';
+  public isAvailable: boolean = false;
 
   constructor() {
-    this.apiKey = process.env.OPENROUTER_API_KEY || '';
-    if (!this.apiKey) {
-      console.error('OpenRouter API key not found');
-    } else {
-      console.log('OpenRouter service initialized');
+    try {
+      this.apiKey = process.env.OPENROUTER_API_KEY || '';
+      this.isAvailable = !!this.apiKey;
+      console.log(`OpenRouter service: ${this.isAvailable ? 'available' : 'not available'}`);
+    } catch (error) {
+      console.error('Failed to initialize OpenRouter service:', error);
+      this.isAvailable = false;
     }
   }
 
   async chat(message: string, model: string): Promise<{ content: string; modelUsed: string }> {
-    if (!this.apiKey) {
+    if (!this.isAvailable) {
       return {
-        content: 'API key not configured. Please check your environment variables.',
-        modelUsed: 'error'
+        content: 'AI service is currently unavailable. Please check your configuration.',
+        modelUsed: 'fallback'
       };
     }
 
@@ -51,6 +54,14 @@ class SimpleOpenRouterService {
       };
 
       const openRouterModel = modelMapping[model] || modelMapping['auto'];
+
+      // Check if fetch is available
+      if (typeof fetch === 'undefined') {
+        return {
+          content: 'Fetch API not available in this environment.',
+          modelUsed: 'fallback'
+        };
+      }
 
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
@@ -80,36 +91,63 @@ class SimpleOpenRouterService {
     } catch (error) {
       console.error('OpenRouter error:', error);
       return {
-        content: `Error: ${error instanceof Error ? error.message : 'Failed to get AI response'}`,
-        modelUsed: model
+        content: `AI service error: ${error instanceof Error ? error.message : 'Unknown error'}. Using fallback response.`,
+        modelUsed: 'fallback'
       };
     }
   }
 }
 
-// Initialize AI service
-const aiService = new SimpleOpenRouterService();
+// Initialize AI service safely
+let aiService: SafeOpenRouterService;
+try {
+  aiService = new SafeOpenRouterService();
+} catch (error) {
+  console.error('Failed to create AI service:', error);
+  // Create a minimal fallback service
+  aiService = {
+    chat: async () => ({
+      content: 'AI service unavailable. Please try again later.',
+      modelUsed: 'fallback'
+    }),
+    isAvailable: false
+  } as any;
+}
 
 // Basic health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'unknown',
-    vercel: process.env.VERCEL ? 'yes' : 'no',
-    openRouterAvailable: !!process.env.OPENROUTER_API_KEY
-  });
+  try {
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'unknown',
+      vercel: process.env.VERCEL ? 'yes' : 'no',
+      openRouterAvailable: aiService.isAvailable || false
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({ 
+      status: 'error',
+      error: 'Health check failed',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Test endpoint
 app.get('/api/test', (req, res) => {
-  res.json({
-    message: 'Server is running!',
-    timestamp: new Date().toISOString()
-  });
+  try {
+    res.json({
+      message: 'Server is running!',
+      timestamp: new Date().toISOString(),
+      aiServiceStatus: aiService.isAvailable ? 'available' : 'unavailable'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Test endpoint failed' });
+  }
 });
 
-// AI Chat endpoint with OpenRouter
+// AI Chat endpoint with fallbacks
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, model } = req.body;
@@ -120,7 +158,7 @@ app.post('/api/chat', async (req, res) => {
 
     console.log('Chat request:', { message, model });
 
-    // Get AI response
+    // Get AI response with fallback
     const { content, modelUsed } = await aiService.chat(message, model || 'auto');
 
     // Detect automations based on keywords
@@ -148,7 +186,13 @@ app.post('/api/chat', async (req, res) => {
     res.json(response);
   } catch (error) {
     console.error('Chat API error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    // Return a fallback response instead of crashing
+    res.json({
+      id: Date.now().toString(),
+      content: 'Sorry, the AI service is temporarily unavailable. Please try again later.',
+      model: 'fallback',
+      automations: []
+    });
   }
 });
 
