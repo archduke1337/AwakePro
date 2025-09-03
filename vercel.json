@@ -1,7 +1,27 @@
 {
   "version": 2,
   "builds": [
-    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "dist/public" } }
+    {
+      "src": "server/index.ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist/public"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "server/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "dist/public/$1"
+    }
   ],
   "env": {
     "OPENROUTER_API_KEY": "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",
