@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 
 // Vercel deployment fix - bulletproof server with AI fallbacks
+// FORCE REBUILD: This server has no routes import and should work on Vercel
 const app = express();
 
 // Basic middleware
