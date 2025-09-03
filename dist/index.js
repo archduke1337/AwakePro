@@ -15,10 +15,16 @@ var OpenRouterService = class {
   apiKey;
   baseUrl = "https://openrouter.ai/api/v1";
   constructor() {
-    this.apiKey = process.env.OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY || "";
+    this.apiKey = process.env.OPENROUTER_API_KEY || "";
     if (!this.apiKey) {
-      throw new Error("OpenRouter API key is required");
+      console.error("OpenRouter API key not found. Available env vars:", {
+        OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY ? "SET" : "NOT SET",
+        NODE_ENV: process.env.NODE_ENV,
+        VERCEL: process.env.VERCEL ? "YES" : "NO"
+      });
+      throw new Error("OpenRouter API key is required. Please check your environment variables.");
     }
+    console.log("OpenRouter service initialized successfully");
   }
   async chat(message, model) {
     try {
@@ -116,6 +122,11 @@ async function registerRoutes(app2) {
   }
   app2.post("/api/chat", async (req, res) => {
     try {
+      console.log("Chat request received:", {
+        body: req.body,
+        headers: req.headers,
+        timestamp: (/* @__PURE__ */ new Date()).toISOString()
+      });
       const { message, model } = req.body;
       if (!message || !message.trim()) {
         return res.status(400).json({ error: "Message is required" });
@@ -123,6 +134,7 @@ async function registerRoutes(app2) {
       if (!model || !["auto", "gpt", "claude", "llama"].includes(model)) {
         return res.status(400).json({ error: "Valid model selection is required" });
       }
+      console.log("Processing chat request:", { message, model });
       const { content, modelUsed } = await openRouterService.chat(message, model);
       const automations = detectAutomations(message);
       const response = {
@@ -131,6 +143,11 @@ async function registerRoutes(app2) {
         model: modelUsed,
         automations
       };
+      console.log("Chat response generated:", {
+        modelUsed,
+        contentLength: content.length,
+        automationsCount: automations.length
+      });
       res.json(response);
     } catch (error) {
       console.error("Chat API error:", error);
@@ -324,24 +341,41 @@ app.use((req, res, next) => {
   next();
 });
 (async () => {
-  const server = await registerRoutes(app);
-  app.use((err, _req, res, _next) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-    res.status(status).json({ message });
-    console.error("Server error:", err);
-  });
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+  try {
+    console.log("Starting server...", {
+      NODE_ENV: process.env.NODE_ENV,
+      VERCEL: process.env.VERCEL ? "YES" : "NO",
+      PORT: process.env.PORT || "5000"
+    });
+    const server = await registerRoutes(app);
+    app.use((err, _req, res, _next) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      console.error("Request error:", { status, message, error: err });
+      res.status(status).json({ message });
+    });
+    if (app.get("env") === "development") {
+      console.log("Setting up Vite for development...");
+      await setupVite(app, server);
+    } else {
+      console.log("Setting up static file serving for production...");
+      serveStatic(app);
+    }
+    const port = parseInt(process.env.PORT || "5000", 10);
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true
+    }, () => {
+      log(`\u2705 Server started successfully on port ${port}`);
+      console.log("Server environment:", {
+        NODE_ENV: process.env.NODE_ENV,
+        VERCEL: process.env.VERCEL ? "YES" : "NO",
+        OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY ? "SET" : "NOT SET"
+      });
+    });
+  } catch (error) {
+    console.error("\u274C Failed to start server:", error);
+    process.exit(1);
   }
-  const port = parseInt(process.env.PORT || "5000", 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true
-  }, () => {
-    log(`serving on port ${port}`);
-  });
 })();

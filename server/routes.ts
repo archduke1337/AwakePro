@@ -10,15 +10,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   try {
     openRouterService = new OpenRouterService();
+    console.log('✅ OpenRouter service initialized successfully');
   } catch (error) {
-    console.error('Failed to initialize OpenRouter service:', error);
+    console.error('❌ Failed to initialize OpenRouter service:', error);
     // Create a fallback service that returns error messages
     openRouterService = {
-      chat: async () => ({
-        content: 'Service temporarily unavailable. Please check your API configuration.',
-        modelUsed: 'error'
-      })
+      chat: async (message: string, model: string) => {
+        console.log('Using fallback service for message:', message);
+        return {
+          content: `Service temporarily unavailable. Please check your API configuration. Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          modelUsed: 'fallback'
+        };
+      }
     } as any;
+    console.log('⚠️ Using fallback OpenRouter service');
   }
 
   // Global error handler for unhandled promise rejections
