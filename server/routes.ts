@@ -65,6 +65,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Chat endpoint
   app.post('/api/chat', async (req, res) => {
     try {
+      console.log('Chat request received:', { 
+        body: req.body, 
+        headers: req.headers,
+        timestamp: new Date().toISOString()
+      });
+
       const { message, model }: ChatRequest = req.body;
 
       if (!message || !message.trim()) {
@@ -74,6 +80,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!model || !['auto', 'gpt', 'claude', 'llama'].includes(model)) {
         return res.status(400).json({ error: 'Valid model selection is required' });
       }
+
+      console.log('Processing chat request:', { message, model });
 
       // Get AI response from OpenRouter
       const { content, modelUsed } = await openRouterService.chat(message, model);
@@ -87,6 +95,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         model: modelUsed,
         automations
       };
+
+      console.log('Chat response generated:', { 
+        modelUsed, 
+        contentLength: content.length,
+        automationsCount: automations.length
+      });
 
       res.json(response);
     } catch (error) {
