@@ -58,8 +58,28 @@ app.use((req, res, next) => {
       PORT: process.env.PORT || '5000'
     });
 
-    const server = await registerRoutes(app);
+    // Initialize routes with error handling
+    let server;
+    try {
+      server = await registerRoutes(app);
+      console.log('✅ Routes registered successfully');
+    } catch (routeError) {
+      console.error('❌ Failed to register routes:', routeError);
+      // Create a minimal server for fallback
+      const { createServer } = await import('http');
+      server = createServer(app);
+      
+      // Add basic error endpoint
+      app.get('/api/health', (req, res) => {
+        res.json({ 
+          status: 'degraded', 
+          message: 'Server running with limited functionality',
+          timestamp: new Date().toISOString()
+        });
+      });
+    }
 
+    // Error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
@@ -68,21 +88,21 @@ app.use((req, res, next) => {
       res.status(status).json({ message });
     });
 
-    // importantly only setup vite in development and after
-    // setting up all the other routes so the catch-all route
-    // doesn't interfere with the other routes
-    if (app.get("env") === "development") {
-      console.log('Setting up Vite for development...');
-      await setupVite(app, server);
-    } else {
-      console.log('Setting up static file serving for production...');
-      serveStatic(app);
+    // Setup static serving or Vite based on environment
+    try {
+      if (app.get("env") === "development") {
+        console.log('Setting up Vite for development...');
+        await setupVite(app, server);
+      } else {
+        console.log('Setting up static file serving for production...');
+        serveStatic(app);
+      }
+    } catch (setupError) {
+      console.error('❌ Failed to setup Vite/static serving:', setupError);
+      // Continue without Vite/static serving
     }
 
-    // ALWAYS serve the app on the port specified in the environment variable PORT
-    // Other ports are firewalled. Default to 5000 if not specified.
-    // this serves both the API and the client.
-    // It is the only port that is not firewalled.
+    // Start server
     const port = parseInt(process.env.PORT || '5000', 10);
     server.listen({
       port,
@@ -98,6 +118,9 @@ app.use((req, res, next) => {
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
-    process.exit(1);
+    // Don't exit in Vercel environment
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
   }
 })();
