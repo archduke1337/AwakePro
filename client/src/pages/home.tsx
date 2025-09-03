@@ -92,15 +92,15 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card">
+      <header className="border-b border-border bg-card gradient-card slide-up">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-center">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">
-              <span className="text-primary">AWAKE</span>{" "}
+            <h1 className="text-3xl font-bold text-foreground tracking-tight fade-in">
+              <span className="text-primary glow-pulse">AWAKE</span>{" "}
               <span className="text-muted-foreground font-normal">– Meta-AI OS Prototype</span>
             </h1>
           </div>
-          <p className="text-center text-muted-foreground text-sm mt-2">
+          <p className="text-center text-muted-foreground text-sm mt-2 fade-in">
             Your unified AI assistant powered by multiple language models
           </p>
         </div>
@@ -109,7 +109,7 @@ export default function Home() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Input Section */}
-        <Card className="mb-6">
+        <Card className="mb-6 hover-lift gradient-card scale-in">
           <CardContent className="p-6">
             <div className="space-y-4">
               {/* Model Selection */}
@@ -118,7 +118,7 @@ export default function Home() {
                   AI Model:
                 </label>
                 <Select value={selectedModel} onValueChange={setSelectedModel} data-testid="select-model">
-                  <SelectTrigger className="flex-1" data-testid="trigger-model-select">
+                  <SelectTrigger className="flex-1 hover-glow" data-testid="trigger-model-select">
                     <SelectValue placeholder="Select AI model" />
                   </SelectTrigger>
                   <SelectContent>
@@ -142,7 +142,7 @@ export default function Home() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   data-testid="input-message"
-                  className="resize-none"
+                  className="resize-none hover-glow focus:ring-2 focus:ring-primary transition-all duration-300"
                 />
               </div>
 
@@ -152,7 +152,7 @@ export default function Home() {
                   onClick={handleSubmit}
                   disabled={chatMutation.isPending || !message.trim()}
                   data-testid="button-submit"
-                  className="px-6 py-2"
+                  className="px-6 py-2 btn-primary hover-scale"
                 >
                   {chatMutation.isPending ? (
                     <LoadingDots />
@@ -169,22 +169,22 @@ export default function Home() {
         <div className="space-y-4" data-testid="responses-container">
           {responses.length === 0 ? (
             /* Empty State */
-            <div className="text-center py-12" data-testid="empty-state">
-              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center py-12 fade-in" data-testid="empty-state">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 hover-scale glow-pulse">
                 <span className="text-2xl text-muted-foreground">🤖</span>
               </div>
               <h3 className="text-lg font-medium text-foreground mb-2">Ready to assist you</h3>
               <p className="text-muted-foreground">Ask any question and let AWAKE's AI ensemble provide you with comprehensive answers.</p>
             </div>
           ) : (
-            responses.map((response) => (
-              <Card key={response.id} className="fade-in" data-testid={`response-${response.id}`}>
+            responses.map((response, index) => (
+              <Card key={response.id} className="fade-in hover-lift gradient-card" data-testid={`response-${response.id}`} style={{animationDelay: `${index * 0.1}s`}}>
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     {/* Response Header */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center glow-pulse hover-scale">
                           <span className="text-primary-foreground text-sm font-semibold">AI</span>
                         </div>
                         <div>
@@ -197,7 +197,7 @@ export default function Home() {
                         </div>
                       </div>
                       <span 
-                        className={`px-2 py-1 text-xs rounded-md font-medium ${getModelBadgeColor(response.model)}`}
+                        className={`px-2 py-1 text-xs rounded-md font-medium hover-scale ${getModelBadgeColor(response.model)}`}
                         data-testid={`badge-model-${response.id}`}
                       >
                         {response.model.toUpperCase()}
@@ -217,7 +217,7 @@ export default function Home() {
                           {response.automations.map((automation, index) => (
                             <div 
                               key={index}
-                              className={`flex items-center gap-2 px-3 py-2 rounded-md ${getAutomationColors(automation.type)}`}
+                              className={`flex items-center gap-2 px-3 py-2 rounded-md hover-scale ${getAutomationColors(automation.type)}`}
                               data-testid={`automation-${automation.type}-${response.id}`}
                             >
                               <span className="text-lg">{automation.icon}</span>
@@ -235,14 +235,14 @@ export default function Home() {
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 mb-8">
-          <Card className="text-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 mb-8 slide-up">
+          <Card className="text-center hover-lift gradient-card">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-primary" data-testid="stat-total-queries">{responses.length}</div>
               <div className="text-sm text-muted-foreground">Total Queries</div>
             </CardContent>
           </Card>
-          <Card className="text-center">
+          <Card className="text-center hover-lift gradient-card">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-primary" data-testid="stat-automations">
                 {responses.reduce((total, response) => total + response.automations.length, 0)}
@@ -250,7 +250,7 @@ export default function Home() {
               <div className="text-sm text-muted-foreground">Automations Triggered</div>
             </CardContent>
           </Card>
-          <Card className="text-center">
+          <Card className="text-center hover-lift gradient-card">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-primary" data-testid="stat-models">4</div>
               <div className="text-sm text-muted-foreground">AI Models Available</div>
@@ -260,7 +260,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-card mt-16">
+      <footer className="border-t border-border bg-card gradient-card mt-16 slide-up">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Tagline */}
           <div className="text-center mb-6">
@@ -272,21 +272,21 @@ export default function Home() {
           {/* Model Status Indicators */}
           <div className="flex justify-center items-center space-x-6 mb-6">
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full animate-pulse ${healthCheck ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <div className={`w-2 h-2 rounded-full status-online ${healthCheck ? 'bg-green-500' : 'bg-red-500'}`}></div>
               <span className="text-xs text-muted-foreground">GPT Online</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full animate-pulse ${healthCheck ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <div className={`w-2 h-2 rounded-full status-online ${healthCheck ? 'bg-green-500' : 'bg-red-500'}`}></div>
               <span className="text-xs text-muted-foreground">Claude Online</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full animate-pulse ${healthCheck ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <div className={`w-2 h-2 rounded-full status-online ${healthCheck ? 'bg-green-500' : 'bg-red-500'}`}></div>
               <span className="text-xs text-muted-foreground">LLaMA Online</span>
             </div>
           </div>
 
           {/* Automation Hub Status */}
-          <Card className="bg-muted">
+          <Card className="bg-muted hover-lift glass-effect">
             <CardContent className="p-4">
               <h3 className="text-sm font-medium text-foreground mb-3 text-center">Automation Hub Status</h3>
               <div className="grid grid-cols-3 gap-4 text-center">
