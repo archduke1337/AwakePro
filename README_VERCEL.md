@@ -14,3 +14,12 @@ npm run vercel-build
 ```
 
 If the client build uses a different output directory, update `vercel.json` -> `distDir` accordingly.
+
+## Environment Variables
+
+After deploying, add these environment variables in your Vercel dashboard:
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `OPENROUTER_API_KEY` | Your OpenRouter API key | ✅ Yes |
+| `DATABASE_URL` | Your Database connection string | ✅ Yes |
