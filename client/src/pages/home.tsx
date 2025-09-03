@@ -92,12 +92,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="py-6 px-4">
+      <header className="py-8 px-4">
         <div className="max-w-2xl mx-auto text-center">
-          <h1 className="text-5xl font-normal text-foreground mb-2 fade-in">
-            <span className="text-primary">AWAKE</span>
+          <h1 className="text-6xl font-light text-foreground mb-3 slide-down">
+            <span className="text-primary float">AWAKE</span>
           </h1>
-          <p className="text-muted-foreground text-lg mb-8 fade-in">
+          <p className="text-muted-foreground text-xl mb-12 fade-in" style={{animationDelay: '0.3s'}}>
             Meta-AI OS Prototype
           </p>
         </div>
@@ -106,7 +106,7 @@ export default function Home() {
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4 py-8">
         {/* Input Section */}
-        <div className="mb-8">
+        <div className="mb-8 scale-in" style={{animationDelay: '0.5s'}}>
           {/* Search Input */}
           <div className="relative mb-6">
             <Textarea
@@ -115,22 +115,28 @@ export default function Home() {
               rows={2}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
               data-testid="input-message"
-              className="w-full text-lg py-4 px-6 border border-border rounded-full resize-none hover-glow focus:ring-2 focus:ring-primary transition-all duration-300 shadow-sm"
+              className="w-full text-lg py-5 px-6 border border-border rounded-full resize-none hover-glow focus:ring-2 focus:ring-primary transition-all duration-500 shadow-sm"
             />
           </div>
 
           {/* Model Selection and Submit */}
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+          <div className="flex flex-col sm:flex-row gap-6 items-center justify-center">
             <Select value={selectedModel} onValueChange={setSelectedModel} data-testid="select-model">
-              <SelectTrigger className="w-48 hover-glow" data-testid="trigger-model-select">
+              <SelectTrigger className="w-52 hover-glow hover-scale" data-testid="trigger-model-select">
                 <SelectValue placeholder="Select AI model" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="auto" data-testid="option-auto">Auto</SelectItem>
-                <SelectItem value="gpt" data-testid="option-gpt">GPT</SelectItem>
-                <SelectItem value="claude" data-testid="option-claude">Claude</SelectItem>
-                <SelectItem value="llama" data-testid="option-llama">LLaMA</SelectItem>
+                <SelectItem value="auto" data-testid="option-auto">🎲 Auto</SelectItem>
+                <SelectItem value="gpt" data-testid="option-gpt">🧠 GPT</SelectItem>
+                <SelectItem value="claude" data-testid="option-claude">🤖 Claude</SelectItem>
+                <SelectItem value="llama" data-testid="option-llama">🦙 LLaMA</SelectItem>
               </SelectContent>
             </Select>
             
@@ -138,12 +144,12 @@ export default function Home() {
               onClick={handleSubmit}
               disabled={chatMutation.isPending || !message.trim()}
               data-testid="button-submit"
-              className="px-8 py-2 btn-primary hover-scale rounded-full"
+              className="px-10 py-3 btn-primary hover-bounce rounded-full text-lg font-medium"
             >
               {chatMutation.isPending ? (
                 <LoadingDots />
               ) : (
-                "Search"
+                "✨ Search"
               )}
             </Button>
           </div>
@@ -153,43 +159,49 @@ export default function Home() {
         <div className="space-y-6" data-testid="responses-container">
           {responses.length === 0 ? (
             /* Empty State */
-            <div className="text-center py-16 fade-in" data-testid="empty-state">
-              <p className="text-muted-foreground text-lg">Ask any question to get started</p>
+            <div className="text-center py-20 bounce-in" data-testid="empty-state" style={{animationDelay: '0.8s'}}>
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 pulse-ring">
+                <span className="text-2xl">🤔</span>
+              </div>
+              <p className="text-muted-foreground text-xl mb-2">Ready when you are!</p>
+              <p className="text-muted-foreground text-sm">Ask any question to get started</p>
             </div>
           ) : (
             responses.map((response, index) => (
-              <Card key={response.id} className="fade-in hover-lift shadow-sm" data-testid={`response-${response.id}`} style={{animationDelay: `${index * 0.1}s`}}>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
+              <Card key={response.id} className="fade-in hover-lift shadow-lg border-0 bg-gradient-to-br from-white to-gray-50" data-testid={`response-${response.id}`} style={{animationDelay: `${index * 0.2}s`}}>
+                <CardContent className="p-8">
+                  <div className="space-y-6">
                     {/* Response Header */}
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-6 slide-down">
                       <span 
-                        className={`px-3 py-1 text-xs rounded-full font-medium ${getModelBadgeColor(response.model)}`}
+                        className={`px-4 py-2 text-sm rounded-full font-medium hover-scale ${getModelBadgeColor(response.model)}`}
                         data-testid={`badge-model-${response.id}`}
                       >
                         {response.model.toUpperCase()}
                       </span>
-                      <p className="text-xs text-muted-foreground" data-testid={`text-timestamp-${response.id}`}>
-                        Just now
+                      <p className="text-sm text-muted-foreground" data-testid={`text-timestamp-${response.id}`}>
+                        • Just now
                       </p>
                     </div>
 
                     {/* Response Content */}
-                    <div className="text-foreground leading-relaxed" data-testid={`text-content-${response.id}`}>
+                    <div className="text-foreground leading-relaxed text-lg fade-in" data-testid={`text-content-${response.id}`} style={{animationDelay: '0.2s'}}>
                       <div className="whitespace-pre-wrap">{response.content}</div>
                     </div>
 
                     {/* Automation Simulations */}
                     {response.automations.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-border">
-                        <div className="flex flex-wrap gap-2">
+                      <div className="mt-6 pt-6 border-t border-border">
+                        <h4 className="text-sm font-medium text-muted-foreground mb-3">Automated Actions</h4>
+                        <div className="flex flex-wrap gap-3">
                           {response.automations.map((automation, index) => (
                             <div 
                               key={index}
-                              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${getAutomationColors(automation.type)}`}
+                              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium hover-bounce ${getAutomationColors(automation.type)}`}
                               data-testid={`automation-${automation.type}-${response.id}`}
+                              style={{animationDelay: `${index * 0.1 + 0.4}s`}}
                             >
-                              <span>{automation.icon}</span>
+                              <span className="text-lg">{automation.icon}</span>
                               <span>{automation.message}</span>
                             </div>
                           ))}
@@ -206,24 +218,27 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-16 py-8">
+      <footer className="mt-20 py-12 fade-in" style={{animationDelay: '1s'}}>
         <div className="text-center">
-          <p className="text-sm text-muted-foreground mb-2">
-            Powered by many AIs, fused into one — <span className="font-medium text-primary">AWAKE</span>
+          <p className="text-lg text-muted-foreground mb-4">
+            Powered by many AIs, fused into one — <span className="font-semibold text-primary glow">AWAKE</span>
           </p>
-          <div className="flex justify-center items-center space-x-4">
-            <div className="flex items-center gap-1">
-              <div className={`w-2 h-2 rounded-full ${healthCheck ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className="text-xs text-muted-foreground">GPT</span>
+          <div className="flex justify-center items-center space-x-6 mb-4">
+            <div className="flex items-center gap-2 hover-scale">
+              <div className={`w-3 h-3 rounded-full pulse-ring ${healthCheck ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className="text-sm text-muted-foreground font-medium">GPT Online</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className={`w-2 h-2 rounded-full ${healthCheck ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className="text-xs text-muted-foreground">Claude</span>
+            <div className="flex items-center gap-2 hover-scale">
+              <div className={`w-3 h-3 rounded-full pulse-ring ${healthCheck ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className="text-sm text-muted-foreground font-medium">Claude Online</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className={`w-2 h-2 rounded-full ${healthCheck ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className="text-xs text-muted-foreground">LLaMA</span>
+            <div className="flex items-center gap-2 hover-scale">
+              <div className={`w-3 h-3 rounded-full pulse-ring ${healthCheck ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className="text-sm text-muted-foreground font-medium">LLaMA Online</span>
             </div>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            🚀 Ready for deployment • ⚡ Powered by OpenRouter
           </div>
         </div>
       </footer>
