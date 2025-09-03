@@ -6,7 +6,29 @@ import type { ChatRequest, ChatResponse, AutomationAction } from "@shared/types"
 import { randomUUID } from "crypto";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  const openRouterService = new OpenRouterService();
+  let openRouterService: OpenRouterService;
+  
+  try {
+    openRouterService = new OpenRouterService();
+  } catch (error) {
+    console.error('Failed to initialize OpenRouter service:', error);
+    // Create a fallback service that returns error messages
+    openRouterService = {
+      chat: async () => ({
+        content: 'Service temporarily unavailable. Please check your API configuration.',
+        modelUsed: 'error'
+      })
+    } as any;
+  }
+
+  // Global error handler for unhandled promise rejections
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  });
+
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+  });
 
   // Helper function to detect automation keywords and generate actions
   function detectAutomations(message: string): AutomationAction[] {
@@ -69,15 +91,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(response);
     } catch (error) {
       console.error('Chat API error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process chat request';
       res.status(500).json({ 
-        error: error instanceof Error ? error.message : 'Failed to process chat request'
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? error : undefined
       });
     }
   });
 
   // Health check endpoint
   app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    try {
+      const healthStatus = {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'unknown',
+        openRouterAvailable: openRouterService && typeof openRouterService.chat === 'function',
+        uptime: process.uptime()
+      };
+      res.json(healthStatus);
+    } catch (error) {
+      console.error('Health check error:', error);
+      res.status(500).json({ 
+        status: 'error',
+        error: 'Health check failed',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // Simple test endpoint
+  app.get('/api/test', (req, res) => {
+    res.json({ 
+      message: 'Server is running!',
+      timestamp: new Date().toISOString(),
+      env: process.env.NODE_ENV || 'unknown'
+    });
   });
 
   const httpServer = createServer(app);
