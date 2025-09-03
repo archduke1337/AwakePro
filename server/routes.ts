@@ -67,7 +67,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return automations;
   }
 
-  // Chat endpoint
+  // Add basic endpoints first to ensure they work
+  app.get('/api/health', (req, res) => {
+    try {
+      const healthStatus = {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'unknown',
+        openRouterAvailable: openRouterService && typeof openRouterService.chat === 'function',
+        uptime: process.uptime()
+      };
+      res.json(healthStatus);
+    } catch (error) {
+      console.error('Health check error:', error);
+      res.status(500).json({ 
+        status: 'error',
+        error: 'Health check failed',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // Simple test endpoint
+  app.get('/api/test', (req, res) => {
+    res.json({ 
+      message: 'Server is running!',
+      timestamp: new Date().toISOString(),
+      env: process.env.NODE_ENV || 'unknown'
+    });
+  });
+
+  // Chat endpoint with error handling
   app.post('/api/chat', async (req, res) => {
     try {
       console.log('Chat request received:', { 
@@ -116,36 +146,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         details: process.env.NODE_ENV === 'development' ? error : undefined
       });
     }
-  });
-
-  // Health check endpoint
-  app.get('/api/health', (req, res) => {
-    try {
-      const healthStatus = {
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'unknown',
-        openRouterAvailable: openRouterService && typeof openRouterService.chat === 'function',
-        uptime: process.uptime()
-      };
-      res.json(healthStatus);
-    } catch (error) {
-      console.error('Health check error:', error);
-      res.status(500).json({ 
-        status: 'error',
-        error: 'Health check failed',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
-
-  // Simple test endpoint
-  app.get('/api/test', (req, res) => {
-    res.json({ 
-      message: 'Server is running!',
-      timestamp: new Date().toISOString(),
-      env: process.env.NODE_ENV || 'unknown'
-    });
   });
 
   const httpServer = createServer(app);

@@ -70,10 +70,11 @@ app.use((req, res, next) => {
       server = createServer(app);
       
       // Add basic error endpoint
-      app.get('/api/health', (req, res) => {
+      app.get('/api/error', (req, res) => {
         res.json({ 
-          status: 'degraded', 
+          status: 'error', 
           message: 'Server running with limited functionality',
+          error: routeError instanceof Error ? routeError.message : 'Unknown error',
           timestamp: new Date().toISOString()
         });
       });
