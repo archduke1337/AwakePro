@@ -20,10 +20,19 @@ export class OpenRouterService {
   private baseUrl = 'https://openrouter.ai/api/v1';
 
   constructor() {
-    this.apiKey = process.env.OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY || '';
+    // Check for the correct environment variable
+    this.apiKey = process.env.OPENROUTER_API_KEY || '';
+    
     if (!this.apiKey) {
-      throw new Error('OpenRouter API key is required');
+      console.error('OpenRouter API key not found. Available env vars:', {
+        OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY ? 'SET' : 'NOT SET',
+        NODE_ENV: process.env.NODE_ENV,
+        VERCEL: process.env.VERCEL ? 'YES' : 'NO'
+      });
+      throw new Error('OpenRouter API key is required. Please check your environment variables.');
     }
+    
+    console.log('OpenRouter service initialized successfully');
   }
 
   async chat(message: string, model: string): Promise<{ content: string; modelUsed: string }> {
